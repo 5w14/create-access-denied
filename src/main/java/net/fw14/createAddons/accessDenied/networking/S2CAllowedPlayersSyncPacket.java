@@ -1,6 +1,8 @@
 package net.fw14.createAddons.accessDenied.networking;
 
+import com.simibubi.create.Create;
 import net.fw14.createAddons.accessDenied.AccessDenied;
+import net.fw14.createAddons.accessDenied.extensions.LogisticsManagerExtensions;
 import net.fw14.createAddons.accessDenied.screen.AccessControlScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
@@ -23,6 +25,10 @@ public class S2CAllowedPlayersSyncPacket {
     public S2CAllowedPlayersSyncPacket(UUID network, Set<UUID> set) {
         this.networkUUID = network;
         this.allowedPlayers = set;
+    }
+
+    public static S2CAllowedPlayersSyncPacket fromNetworkId(UUID network) {
+        return new S2CAllowedPlayersSyncPacket(network, ((LogisticsManagerExtensions) Create.LOGISTICS).accessDenied$getAllowedPlayers(network));
     }
 
     public static S2CAllowedPlayersSyncPacket read(FriendlyByteBuf buffer) {

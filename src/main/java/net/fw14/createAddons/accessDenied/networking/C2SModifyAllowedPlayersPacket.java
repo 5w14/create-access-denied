@@ -1,10 +1,12 @@
 package net.fw14.createAddons.accessDenied.networking;
 
 import com.simibubi.create.Create;
+import net.fw14.createAddons.accessDenied.AccessDenied;
 import net.fw14.createAddons.accessDenied.extensions.LogisticNetworkExtensions;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
+import net.minecraftforge.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
@@ -76,6 +78,10 @@ public class C2SModifyAllowedPlayersPacket {
                 case REMOVE -> network.accessDenied$removeAllowedPlayer(this.playerUUID);
                 case CLEAR -> network.accessDenied$clearAllowedPlayers();
             }
+
+            Create.LOGISTICS.markDirty();
+            AccessDenied.NETWORK_CHANNEL.send(PacketDistributor.PLAYER.with(() -> ctx.get().getSender()),
+                    S2CAllowedPlayersSyncPacket.fromNetworkId(this.networkId));
         });
 
         ctx.get().setPacketHandled(true);

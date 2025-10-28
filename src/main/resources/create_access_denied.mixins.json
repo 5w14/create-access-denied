@@ -10,6 +10,7 @@
     "StockTickerInteractionHandlerMixin"
   ],
   "client": [
+    "MinecraftAccessor",
     "StockKeeperRequestScreenMixin"
   ],
   "injectors": {
