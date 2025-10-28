@@ -1,6 +1,8 @@
 package net.fw14.createAddons.accessDenied.networking;
 
 import net.fw14.createAddons.accessDenied.AccessDenied;
+import net.fw14.createAddons.accessDenied.screen.AccessControlScreen;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
@@ -47,6 +49,7 @@ public class S2CAllowedPlayersSyncPacket {
 
         ctx.get().enqueueWork(() -> {
             AccessDenied.AllowedPlayersClientState.put(networkUUID, allowedPlayers);
+            allowedPlayers.forEach((uuid) -> AccessControlScreen.ProfileCache.preCache(uuid, Minecraft.getInstance()));
         });
 
         ctx.get().setPacketHandled(true);

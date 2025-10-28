@@ -22,6 +22,8 @@ public class AccessDenied {
     public static final String MODID = "create_access_denied";
     private static final Logger LOGGER = LogUtils.getLogger();
 
+    public static final int PLAYER_LIMIT = 18;
+
     public static final Map<UUID, Set<UUID>> AllowedPlayersClientState = new HashMap<>();
 
     public static final SimpleChannel NETWORK_CHANNEL = NetworkRegistry.newSimpleChannel(
