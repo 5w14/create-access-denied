@@ -6,7 +6,8 @@
   "refmap": "create_access_denied.refmap.json",
   "mixins": [
     "LogisticNetworkMixin",
-    "LogisticsMixin"
+    "LogisticsMixin",
+    "StockTickerInteractionHandlerMixin"
   ],
   "client": [
     "StockKeeperRequestScreenMixin"

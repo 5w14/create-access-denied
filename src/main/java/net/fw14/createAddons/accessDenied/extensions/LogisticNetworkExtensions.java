@@ -1,4 +1,4 @@
-package net.fw14.createAddons.accessDenied.mixin;
+package net.fw14.createAddons.accessDenied.extensions;
 
 import java.util.Set;
 import java.util.UUID;

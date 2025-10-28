@@ -1,6 +1,7 @@
 package net.fw14.createAddons.accessDenied.mixin;
 
 import com.simibubi.create.content.logistics.packagerLink.LogisticsNetwork;
+import net.fw14.createAddons.accessDenied.extensions.LogisticNetworkExtensions;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
