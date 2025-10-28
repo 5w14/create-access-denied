@@ -1,0 +1,20 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.fw14.createAddons.accessDenied.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "create_access_denied.refmap.json",
+  "mixins": [
+    "LogisticNetworkMixin",
+    "LogisticsMixin"
+  ],
+  "client": [
+    "StockKeeperRequestScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}
