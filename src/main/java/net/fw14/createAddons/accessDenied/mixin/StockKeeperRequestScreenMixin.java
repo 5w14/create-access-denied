@@ -44,7 +44,7 @@ public class StockKeeperRequestScreenMixin extends Screen {
         }
     }
 
-    @Inject(at=@At("RETURN"), method = "mouseClicked", remap = false)
+    @Inject(at=@At("RETURN"), method = "mouseClicked")
     public void click(double mouseX, double mouseY, int pButton, CallbackInfoReturnable<Boolean> cir) {
         if (!isAdmin || !isLocked) return;
         int posX = lockX + 17;
