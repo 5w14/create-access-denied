@@ -25,7 +25,6 @@ public class S2CAllowedPlayersSyncPacket {
 
     public static S2CAllowedPlayersSyncPacket read(FriendlyByteBuf buffer) {
         var networkUUID = buffer.readUUID();
-
         var count = buffer.readByte();
         var set = new HashSet<UUID>();
         for (int i = 0; i < count; i++) {

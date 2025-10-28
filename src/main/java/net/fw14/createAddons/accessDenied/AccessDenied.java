@@ -2,6 +2,7 @@ package net.fw14.createAddons.accessDenied;
 
 import com.mojang.logging.LogUtils;
 import com.simibubi.create.content.logistics.stockTicker.StockKeeperRequestScreen;
+import net.fw14.createAddons.accessDenied.networking.C2SModifyAllowedPlayersPacket;
 import net.fw14.createAddons.accessDenied.networking.S2CAllowedPlayersSyncPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -38,6 +39,8 @@ public class AccessDenied {
         int msgType = 0;
         NETWORK_CHANNEL.registerMessage(msgType++, S2CAllowedPlayersSyncPacket.class,
                 S2CAllowedPlayersSyncPacket::write, S2CAllowedPlayersSyncPacket::read, S2CAllowedPlayersSyncPacket::handle);
+        NETWORK_CHANNEL.registerMessage(msgType++, C2SModifyAllowedPlayersPacket.class,
+                C2SModifyAllowedPlayersPacket::write, C2SModifyAllowedPlayersPacket::read, C2SModifyAllowedPlayersPacket::handle);
     }
 
     public static void renderScreenForeground(GuiGraphics graphics, int mouseX, int mouseY, boolean canAdmin, boolean isLocked,
@@ -50,17 +53,6 @@ public class AccessDenied {
             graphics.drawString(Minecraft.getInstance().font, Component.literal(player.toString()),
                     screen.width / 2 + 110, startPos+=10, 0xFFFFFF);
         }
-    }
-
-    public static boolean getfie(StockKeeperRequestScreen screen, String name) {
-        try {
-            var cls = screen.getClass();
-            var field = cls.getDeclaredField(name);
-            field.setAccessible(true);
-            return field.getBoolean(screen);
-        } catch (Exception e) {
-        }
-        return false;
     }
 
     public static void initScreen(StockKeeperRequestScreen screen) {
