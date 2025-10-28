@@ -13,10 +13,7 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 import org.slf4j.Logger;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(AccessDenied.MODID)
@@ -43,15 +40,21 @@ public class AccessDenied {
                 C2SModifyAllowedPlayersPacket::write, C2SModifyAllowedPlayersPacket::read, C2SModifyAllowedPlayersPacket::handle);
     }
 
-    public static void renderScreenForeground(GuiGraphics graphics, int mouseX, int mouseY, boolean canAdmin, boolean isLocked,
+    public static void renderScreenForeground(GuiGraphics graphics, int mouseX, int mouseY,
+                                              boolean isAdmin, boolean isLocked, int lockX, int lockY,
                                               UUID networkId, StockKeeperRequestScreen screen) {
-        graphics.drawString(Minecraft.getInstance().font, Component.literal("locked:"+isLocked + " net:" + networkId), screen.width / 2 + 110, screen.searchBox.getY(), 0xFFFFFF);
 
-        var network = AccessDenied.AllowedPlayersClientState.getOrDefault(networkId, Set.of());
-        int startPos = screen.searchBox.getY() + 15;
-        for (UUID player : network) {
-            graphics.drawString(Minecraft.getInstance().font, Component.literal(player.toString()),
-                    screen.width / 2 + 110, startPos+=10, 0xFFFFFF);
+        if (!isAdmin || !isLocked) return;
+
+        int posX = lockX + 17;
+        graphics.blit(ResourceLocation.fromNamespaceAndPath(MODID, "textures/gui/configure_button.png"),
+                posX, lockY, 0, 0, 16, 16, 16, 16);
+
+        if (mouseX > posX && mouseX <= posX + 16 && mouseY > lockY && mouseY <= lockY + 16) {
+            graphics.renderComponentTooltip(Minecraft.getInstance().font,
+                    List.of(
+                            Component.translatable("create_access_denied.configure_button")),
+                    mouseX, mouseY);
         }
     }
 
