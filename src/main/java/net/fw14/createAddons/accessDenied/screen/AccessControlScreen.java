@@ -81,9 +81,7 @@ public class AccessControlScreen extends Screen {
 
         font = new NoShadowFontWrapper(minecraft.font);
 
-        var box = addRenderableWidget(
-                new EditBox(font, uiStartX + 10, uiStartY + 103,
-                157, 16, Component.literal("test")));
+        var box = addRenderableWidget(new EditBox(font, uiStartX + 10, uiStartY + 103, 157, 16, Component.empty()));
         box.setBordered(false);
         box.setMaxLength(16);
         box.setTextColor(0xFFFFFF);
@@ -146,6 +144,10 @@ public class AccessControlScreen extends Screen {
                 playerRenderY += HEAD_SIZE + 4;
                 playerRenderX = uiStartX - 6;
             }
+        }
+
+        if (networkAllowedPlayers.isEmpty()) {
+            graphics.drawCenteredString(font, Component.translatable("create_access_denied.screen.no_players").withStyle(ChatFormatting.ITALIC), this.width / 2, this.height / 2 - 4, 0x88edcdbd);
         }
 
         // Back button
