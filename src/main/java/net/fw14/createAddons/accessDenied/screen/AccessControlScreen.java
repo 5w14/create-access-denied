@@ -153,7 +153,7 @@ public class AccessControlScreen extends Screen {
         // Back button
         if (isHovering(mouseX, mouseY, uiStartX - 7, uiStartY + UI_HEIGHT + 4, 55, 15)) {
             graphics.blit(UI_RL, uiStartX - 7, uiStartY + UI_HEIGHT + 4, 0, 160, 55, 15);
-            graphics.drawCenteredString(font, Component.translatable("gui.done"), uiStartX + 22, uiStartY + UI_HEIGHT + 8, 0xa8bcf2);
+            graphics.drawCenteredString(font, Component.translatable("gui.done"), uiStartX + 22, uiStartY + UI_HEIGHT + 8, 0x3d473b);
         } else {
             graphics.blit(UI_RL, uiStartX - 7, uiStartY + UI_HEIGHT + 4, 0, 144, 55, 15);
             graphics.drawCenteredString(font, Component.translatable("gui.done"), uiStartX + 22, uiStartY + UI_HEIGHT + 8, 0x323232);
