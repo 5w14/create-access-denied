@@ -114,7 +114,7 @@ public class AccessControlScreen extends Screen {
         }
 
 
-        graphics.drawString(font, Component.translatable("create_access_denied.screen.players"), uiStartX + 12, uiStartY + 22, 0xedcdbd);
+        graphics.drawString(font, Component.translatable("create_access_denied.screen.players"), uiStartX + 12, uiStartY + 23, 0xedcdbd);
 
         var playerRenderX = uiStartX - 6;
         var playerRenderY = uiStartY + 36;
@@ -148,14 +148,35 @@ public class AccessControlScreen extends Screen {
             }
         }
 
+        // Back button
+        if (isHovering(mouseX, mouseY, uiStartX - 7, uiStartY + UI_HEIGHT + 4, 55, 15)) {
+            graphics.blit(UI_RL, uiStartX - 7, uiStartY + UI_HEIGHT + 4, 0, 160, 55, 15);
+            graphics.drawCenteredString(font, Component.translatable("gui.done"), uiStartX + 22, uiStartY + UI_HEIGHT + 8, 0xa8bcf2);
+        } else {
+            graphics.blit(UI_RL, uiStartX - 7, uiStartY + UI_HEIGHT + 4, 0, 144, 55, 15);
+            graphics.drawCenteredString(font, Component.translatable("gui.done"), uiStartX + 22, uiStartY + UI_HEIGHT + 8, 0x323232);
+        }
+
+
         playerUsernameBox.active = !atLimit();
         super.render(graphics, mouseX, mouseY, f);
+    }
+
+    boolean isHovering(double mouseX, double mouseY, int x, int y, int w, int h) {
+        return mouseX > x && mouseX < x + w && mouseY > y && mouseY < y + h;
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
         int uiStartX = this.width / 2 - UI_WIDTH / 2 ;
         int uiStartY = this.height / 2 - UI_HEIGHT / 2;
+
+        if (isHovering(mouseX, mouseY, uiStartX - 7, uiStartY + UI_HEIGHT + 4, 55, 15) && mouseButton == 0) {
+            minecraft.setScreen(parent);
+            Minecraft.getInstance().getSoundManager().
+                    play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.get(), 1.0f, 0.8f * 0.25F));
+            return true;
+        }
 
         if (isHoveringButton(mouseX, mouseY) && mouseButton == 0) {
             submitToAdd();
@@ -198,8 +219,8 @@ public class AccessControlScreen extends Screen {
     boolean isHoveringButton(double mouseX, double mouseY) {
         int uiStartX = this.width / 2 - UI_WIDTH / 2 ;
         int uiStartY = this.height / 2 - UI_HEIGHT / 2;
-        return mouseX > uiStartX + ADD_BUTTON_START_X && mouseX <= uiStartX + ADD_BUTTON_START_X + ADD_BUTTON_SIZE &&
-                mouseY > uiStartY + ADD_BUTTON_START_Y && mouseY <= uiStartY + ADD_BUTTON_START_Y + ADD_BUTTON_SIZE;
+        return isHovering(mouseX, mouseY, uiStartX + ADD_BUTTON_START_X, uiStartY + ADD_BUTTON_START_Y,
+                ADD_BUTTON_SIZE, ADD_BUTTON_SIZE);
     }
 
     boolean atLimit() {
@@ -222,6 +243,7 @@ public class AccessControlScreen extends Screen {
             return;
         }
 
+        this.playerUsernameBox.setValue("");
         CompletableFuture.runAsync(() -> {
             AccessDenied.fetchProfileByUsername(value).whenComplete((profile, exception) -> {
                 if (exception != null || profile == null)
@@ -243,10 +265,5 @@ public class AccessControlScreen extends Screen {
     @Override
     public boolean isPauseScreen() {
         return false;
-    }
-
-    @Override
-    public void onClose() {
-        minecraft.setScreen(this.parent);
     }
 }
