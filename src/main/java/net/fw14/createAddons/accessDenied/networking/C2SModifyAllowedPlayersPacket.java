@@ -33,7 +33,7 @@ public class C2SModifyAllowedPlayersPacket {
 
         var oMode = Mode.fromId(buffer.readByte());
         if (oMode.isEmpty())
-            throw new RuntimeException("Illegal Mode supplied!");
+            throw new RuntimeException("Invalid Mode supplied!");
 
         var mode = oMode.get();
         UUID playerId = null;

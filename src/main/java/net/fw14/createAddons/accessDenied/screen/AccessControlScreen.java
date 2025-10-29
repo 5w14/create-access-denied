@@ -58,12 +58,7 @@ public class AccessControlScreen extends Screen {
 
         public static void preCache(UUID playerUUID, Minecraft minecraft) {
             CompletableFuture.runAsync(() -> {
-                var profile = new GameProfile(playerUUID, null);
-                profile = minecraft.getMinecraftSessionService().fillProfileProperties(profile, false);
-                var tex = minecraft.getMinecraftSessionService().getTextures(profile, false).get(MinecraftProfileTexture.Type.SKIN);
-                var resloc = minecraft.getSkinManager().registerTexture(tex, MinecraftProfileTexture.Type.SKIN);
-                var toCache = new ProfileCache(profile, tex, resloc);
-                profileCache.put(playerUUID, toCache);
+                get(playerUUID, minecraft);
             });
         }
 
@@ -111,7 +106,6 @@ public class AccessControlScreen extends Screen {
             graphics.blit(UI_RL, uiStartX + 170, uiStartY + 98, 208, 80, 18, 18);
 
             if (isHoveringButton(mouseX, mouseY)) {
-
                 graphics.renderComponentTooltip(minecraft.font,
                         List.of(Component.translatable("create_access_denied.screen.at_limit", AccessDenied.PLAYER_LIMIT)), mouseX, mouseY);
             }
@@ -156,43 +150,6 @@ public class AccessControlScreen extends Screen {
 
         playerUsernameBox.active = !atLimit();
         super.render(graphics, mouseX, mouseY, f);
-    }
-
-    boolean atLimit() {
-        var networkAllowedPlayers = AccessDenied.AllowedPlayersClientState.get(networkId);
-        return networkAllowedPlayers.size() >= AccessDenied.PLAYER_LIMIT;
-    }
-
-    private void submitToAdd() {
-        if (atLimit())
-            return;
-
-        var value = this.playerUsernameBox.getValue();
-
-        // Skip UUID lookup for known players
-        var cachedProfile = profileCache.values().stream().filter(v ->
-                v.profile.getName().equalsIgnoreCase(value)).findFirst();
-        if (cachedProfile.isPresent()) {
-            AccessDenied.NETWORK_CHANNEL.sendToServer
-                    (C2SModifyAllowedPlayersPacket.add(this.networkId, cachedProfile.get().profile().getId()));
-            return;
-        }
-
-        CompletableFuture.runAsync(() -> {
-            AccessDenied.fetchProfileByUsername(value).whenComplete((profile, exception) -> {
-                if (exception != null || profile == null)
-                    return;
-
-                ProfileCache.preCache(profile.getId(), minecraft);
-                AccessDenied.NETWORK_CHANNEL.sendToServer
-                        (C2SModifyAllowedPlayersPacket.add(this.networkId, profile.getId()));
-            });
-        });
-    }
-
-    private void submitToRemove(ProfileCache cached) {
-        AccessDenied.NETWORK_CHANNEL.sendToServer(
-                C2SModifyAllowedPlayersPacket.remove(this.networkId, cached.profile.getId()));
     }
 
     @Override
@@ -244,6 +201,44 @@ public class AccessControlScreen extends Screen {
         return mouseX > uiStartX + ADD_BUTTON_START_X && mouseX <= uiStartX + ADD_BUTTON_START_X + ADD_BUTTON_SIZE &&
                 mouseY > uiStartY + ADD_BUTTON_START_Y && mouseY <= uiStartY + ADD_BUTTON_START_Y + ADD_BUTTON_SIZE;
     }
+
+    boolean atLimit() {
+        var networkAllowedPlayers = AccessDenied.AllowedPlayersClientState.get(networkId);
+        return networkAllowedPlayers.size() >= AccessDenied.PLAYER_LIMIT;
+    }
+
+    private void submitToAdd() {
+        if (atLimit())
+            return;
+
+        var value = this.playerUsernameBox.getValue();
+
+        // Skip UUID lookup for known players
+        var cachedProfile = profileCache.values().stream().filter(v ->
+                v.profile.getName().equalsIgnoreCase(value)).findFirst();
+        if (cachedProfile.isPresent()) {
+            AccessDenied.NETWORK_CHANNEL.sendToServer
+                    (C2SModifyAllowedPlayersPacket.add(this.networkId, cachedProfile.get().profile().getId()));
+            return;
+        }
+
+        CompletableFuture.runAsync(() -> {
+            AccessDenied.fetchProfileByUsername(value).whenComplete((profile, exception) -> {
+                if (exception != null || profile == null)
+                    return;
+
+                ProfileCache.preCache(profile.getId(), minecraft);
+                AccessDenied.NETWORK_CHANNEL.sendToServer
+                        (C2SModifyAllowedPlayersPacket.add(this.networkId, profile.getId()));
+            });
+        });
+    }
+
+    private void submitToRemove(ProfileCache cached) {
+        AccessDenied.NETWORK_CHANNEL.sendToServer(
+                C2SModifyAllowedPlayersPacket.remove(this.networkId, cached.profile.getId()));
+    }
+
 
     @Override
     public boolean isPauseScreen() {
