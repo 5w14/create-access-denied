@@ -9,7 +9,6 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
@@ -38,7 +37,7 @@ public class AccessControlScreen extends Screen {
     public static final int HEAD_SIZE = 13;
     public static final int WRAP_COUNT = 9;
 
-    private EditBox playerUsernameBox;
+    private PlayerEditBox playerUsernameBox;
     static Font font;
 
     private static final Map<UUID, ProfileCache> profileCache = new ConcurrentHashMap<>();
@@ -51,7 +50,8 @@ public class AccessControlScreen extends Screen {
             var profile = new GameProfile(uuid, null);
             profile = minecraft.getMinecraftSessionService().fillProfileProperties(profile, false);
             var tex = minecraft.getMinecraftSessionService().getTextures(profile, false).get(MinecraftProfileTexture.Type.SKIN);
-            var resloc = minecraft.getSkinManager().registerTexture(tex, MinecraftProfileTexture.Type.SKIN);
+            var resloc = tex != null ? minecraft.getSkinManager().registerTexture(tex, MinecraftProfileTexture.Type.SKIN)
+                    : minecraft.getSkinManager().getInsecureSkinLocation(profile);
             var toCache = new ProfileCache(profile, tex, resloc);
             profileCache.put(uuid, toCache);
             return toCache;
@@ -84,11 +84,21 @@ public class AccessControlScreen extends Screen {
 
         font = new NoShadowFontWrapper(minecraft.font);
 
-        var box = addRenderableWidget(new EditBox(font, uiStartX + 10, uiStartY + 103, 157, 16, Component.empty()));
+        var box = addRenderableWidget( new PlayerEditBox(this, font, uiStartX + 10, uiStartY + 103, 157, 16, false) );
         box.setBordered(false);
         box.setMaxLength(16);
         box.setTextColor(0xFFFFFF);
         this.playerUsernameBox = box;
+    }
+
+    @Override
+    public void tick() {
+        if (this.playerUsernameBox != null) {
+            if (this.playerUsernameBox.isFocused()) this.playerUsernameBox.tick();
+            else this.playerUsernameBox.hideSuggestions();
+        }
+
+        super.tick();
     }
 
     @Override
@@ -161,7 +171,6 @@ public class AccessControlScreen extends Screen {
             graphics.blit(UI_RL, uiStartX - 7, uiStartY + UI_HEIGHT + 4, 0, 144, 55, 15);
             graphics.drawCenteredString(font, Component.translatable("gui.done"), uiStartX + 22, uiStartY + UI_HEIGHT + 8, 0x323232);
         }
-
 
         playerUsernameBox.active = !atLimit();
         super.render(graphics, mouseX, mouseY, f);
@@ -278,7 +287,6 @@ public class AccessControlScreen extends Screen {
         AccessDenied.NETWORK_CHANNEL.sendToServer(
                 C2SModifyAllowedPlayersPacket.remove(this.networkId, cached.profile.getId()));
     }
-
 
     @Override
     public boolean isPauseScreen() {
