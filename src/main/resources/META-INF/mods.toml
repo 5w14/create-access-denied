@@ -7,9 +7,8 @@ issueTrackerURL="https://github.com/5w14/create-access-denied/issues"
 modId = "${mod_id}"
 version = "${mod_version}"
 displayName = "${mod_name}"
-#logoFile="create_access_denied.png"
+logoFile="icon.png"
 authors = "${mod_authors}"
-
 description = '''${mod_description}'''
 
 [[dependencies."${mod_id}"]]
