@@ -221,6 +221,17 @@ public class AccessControlScreen extends Screen {
         return super.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
+    @Override
+    public boolean keyPressed(int keyCode, int p_96553_, int p_96554_) {
+        if (keyCode == GLFW.GLFW_KEY_ENTER
+                && this.playerUsernameBox.isFocused()) {
+            this.submitToAdd();
+            return true;
+        }
+
+        return super.keyPressed(keyCode, p_96553_, p_96554_);
+    }
+
     boolean isHoveringButton(double mouseX, double mouseY) {
         int uiStartX = this.width / 2 - UI_WIDTH / 2 ;
         int uiStartY = this.height / 2 - UI_HEIGHT / 2;
@@ -238,6 +249,8 @@ public class AccessControlScreen extends Screen {
             return;
 
         var value = this.playerUsernameBox.getValue();
+        if (value.length() < 3)
+            return;
 
         // Skip UUID lookup for known players
         var cachedProfile = profileCache.values().stream().filter(v ->
