@@ -3,6 +3,7 @@ package net.fw14.createAddons.accessDenied.mixin;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.simibubi.create.content.logistics.stockTicker.StockKeeperRequestScreen;
 import com.simibubi.create.content.logistics.stockTicker.StockTickerBlockEntity;
+import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.gui.UIRenderHelper;
 import net.createmod.catnip.theme.Color;
 import net.fw14.createAddons.accessDenied.AccessDenied;
@@ -30,12 +31,8 @@ public class StockKeeperRequestScreenMixin extends Screen {
     @Shadow StockTickerBlockEntity blockEntity;
     @Shadow int lockX;
     @Shadow int lockY;
-
     @Shadow private boolean scrollHandleActive;
-
-    @Shadow public boolean moveToTopNextTick;
-
-    @Shadow public net.createmod.catnip.animation.LerpedFloat itemScroll;
+    @Shadow public LerpedFloat itemScroll;
 
     protected StockKeeperRequestScreenMixin(Component p_96550_) { super(p_96550_); }
 
