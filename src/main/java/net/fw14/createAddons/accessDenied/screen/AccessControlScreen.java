@@ -26,7 +26,7 @@ public class AccessControlScreen extends Screen {
     private final UUID networkId;
     private final Screen parent;
 
-    private static final ResourceLocation UI_RL = ResourceLocation.fromNamespaceAndPath(AccessDenied.MODID, "textures/gui/ui_background.png");
+    private static final ResourceLocation UI_RL = new ResourceLocation(AccessDenied.MODID, "textures/gui/ui_background.png");
     private static final int UI_WIDTH = 192;
     private static final int UI_HEIGHT = 119;
 

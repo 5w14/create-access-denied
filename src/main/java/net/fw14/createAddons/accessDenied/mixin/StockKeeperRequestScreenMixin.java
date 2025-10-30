@@ -51,7 +51,7 @@ public class StockKeeperRequestScreenMixin extends Screen {
         graphics.pose().pushPose();
         graphics.pose().translate(0f - 4f * progress, 0f, 0f);
 
-        RenderSystem.setShaderTexture(0, ResourceLocation.fromNamespaceAndPath(AccessDenied.MODID, "textures/gui/configure_button.png"));
+        RenderSystem.setShaderTexture(0, new ResourceLocation(AccessDenied.MODID, "textures/gui/configure_button.png"));
         UIRenderHelper.drawColoredTexture(graphics, Color.WHITE.setAlpha(1f - progress), posX, lockY, 0, 0, 0, 16, 16, 16, 16);
 
         graphics.pose().popPose();

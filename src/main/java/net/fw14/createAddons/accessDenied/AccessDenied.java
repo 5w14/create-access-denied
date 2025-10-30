@@ -35,7 +35,7 @@ public class AccessDenied {
     public static final Map<UUID, Set<UUID>> AllowedPlayersClientState = new HashMap<>();
 
     public static final SimpleChannel NETWORK_CHANNEL = NetworkRegistry.newSimpleChannel(
-            ResourceLocation.fromNamespaceAndPath(MODID, "networking"),
+            new ResourceLocation(MODID, "networking"),
             () -> PROTOCOL_VERSION,
             PROTOCOL_VERSION::equals,
             PROTOCOL_VERSION::equals
