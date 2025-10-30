@@ -1,0 +1,8 @@
+{
+  "create_access_denied.configure_button": "Настроить доступ",
+  "create_access_denied.screen.access_control": "Управление доступа сети",
+  "create_access_denied.screen.remove_hint": "Shift-клик, чтобы удалить доступ",
+  "create_access_denied.screen.players": "Игроки с доступом",
+  "create_access_denied.screen.at_limit": "Вы не можете добавить больше, чем %s игроков",
+  "create_access_denied.screen.no_players": "Нет добавленных игроков"
+}
