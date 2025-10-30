@@ -35,7 +35,7 @@ public class AccessDenied {
     public static final Map<UUID, Set<UUID>> AllowedPlayersClientState = new HashMap<>();
 
     public static final SimpleChannel NETWORK_CHANNEL = NetworkRegistry.newSimpleChannel(
-            new ResourceLocation(MODID, "networking"),
+            resLoc("networking"),
             () -> PROTOCOL_VERSION,
             PROTOCOL_VERSION::equals,
             PROTOCOL_VERSION::equals
@@ -76,5 +76,15 @@ public class AccessDenied {
     static void setup() {
         var service = ((MinecraftAccessor) Minecraft.getInstance()).getAuthenticationService();
         gameProfileRepository = service.createProfileRepository();
+    }
+
+    public static ResourceLocation resLoc(String location) { 
+        try { 
+            if (ResourceLocation.class.getMethod("fromNamespaceAndPath", String.class, String.class) != null)
+                return ResourceLocation.fromNamespaceAndPath(MODID, location);
+        } catch (Exception nsm) { 
+        }
+
+        return new ResourceLocation(MODID, location);
     }
 }

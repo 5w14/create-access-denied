@@ -12,7 +12,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import org.joml.Math;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -51,7 +50,7 @@ public class StockKeeperRequestScreenMixin extends Screen {
         graphics.pose().pushPose();
         graphics.pose().translate(0f - 4f * progress, 0f, 0f);
 
-        RenderSystem.setShaderTexture(0, new ResourceLocation(AccessDenied.MODID, "textures/gui/configure_button.png"));
+        RenderSystem.setShaderTexture(0, AccessDenied.resLoc("textures/gui/configure_button.png"));
         UIRenderHelper.drawColoredTexture(graphics, Color.WHITE.setAlpha(1f - progress), posX, lockY, 0, 0, 0, 16, 16, 16, 16);
 
         graphics.pose().popPose();
