@@ -182,6 +182,9 @@ public class AccessControlScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+        if (super.mouseClicked(mouseX, mouseY, mouseButton))
+            return true;
+
         int uiStartX = this.width / 2 - UI_WIDTH / 2 ;
         int uiStartY = this.height / 2 - UI_HEIGHT / 2;
 
@@ -227,7 +230,7 @@ public class AccessControlScreen extends Screen {
             }
         }
 
-        return super.mouseClicked(mouseX, mouseY, mouseButton);
+        return false;
     }
 
     @Override
@@ -261,6 +264,8 @@ public class AccessControlScreen extends Screen {
         if (value.length() < 3)
             return;
 
+        this.playerUsernameBox.setValue("");
+
         // Skip UUID lookup for known players
         var cachedProfile = profileCache.values().stream().filter(v ->
                 v.profile.getName().equalsIgnoreCase(value)).findFirst();
@@ -270,7 +275,6 @@ public class AccessControlScreen extends Screen {
             return;
         }
 
-        this.playerUsernameBox.setValue("");
         CompletableFuture.runAsync(() -> {
             AccessDenied.fetchProfileByUsername(value).whenComplete((profile, exception) -> {
                 if (exception != null || profile == null)
