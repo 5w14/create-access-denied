@@ -1,6 +1,5 @@
 package net.fw14.createAddons.accessDenied;
 
-import com.mojang.authlib.Agent;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.GameProfileRepository;
 import com.mojang.authlib.ProfileLookupCallback;
@@ -10,11 +9,10 @@ import net.fw14.createAddons.accessDenied.networking.C2SModifyAllowedPlayersPack
 import net.fw14.createAddons.accessDenied.networking.S2CAllowedPlayersSyncPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
+import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.network.NetworkRegistry;
-import net.neoforged.network.simple.SimpleChannel;
-import org.apache.commons.lang3.ArrayUtils;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import org.slf4j.Logger;
 
 import java.util.HashMap;
@@ -35,40 +33,33 @@ public class AccessDenied {
 
     public static final Map<UUID, Set<UUID>> AllowedPlayersClientState = new HashMap<>();
 
-    public static final SimpleChannel NETWORK_CHANNEL = NetworkRegistry.newSimpleChannel(
-            resLoc("networking"),
-            () -> PROTOCOL_VERSION,
-            PROTOCOL_VERSION::equals,
-            PROTOCOL_VERSION::equals
-    );
-
     public AccessDenied() {
         setup();
-        setupNetworking();
     }
 
 
-    private static void setupNetworking() {
-        int msgType = 0;
-        NETWORK_CHANNEL.registerMessage(msgType++, S2CAllowedPlayersSyncPacket.class,
-                S2CAllowedPlayersSyncPacket::write, S2CAllowedPlayersSyncPacket::read, S2CAllowedPlayersSyncPacket::handle);
-        NETWORK_CHANNEL.registerMessage(msgType++, C2SModifyAllowedPlayersPacket.class,
-                C2SModifyAllowedPlayersPacket::write, C2SModifyAllowedPlayersPacket::read, C2SModifyAllowedPlayersPacket::handle);
+    @SubscribeEvent
+    private static void setupNetworking(RegisterPayloadHandlersEvent event) {
+        var protocol = event.registrar(PROTOCOL_VERSION);
+        protocol.playToClient(S2CAllowedPlayersSyncPacket.TYPE, S2CAllowedPlayersSyncPacket.CODEC, S2CAllowedPlayersSyncPacket::handle);
+        protocol.playToServer(C2SModifyAllowedPlayersPacket.TYPE, C2SModifyAllowedPlayersPacket.CODEC, C2SModifyAllowedPlayersPacket::handle);
     }
 
     static GameProfileRepository gameProfileRepository;
 
     public static CompletableFuture<GameProfile> fetchProfileByUsername(String username) {
         var future = new CompletableFuture<GameProfile>();
-        gameProfileRepository.findProfilesByNames(ArrayUtils.toArray(username), Agent.MINECRAFT, new ProfileLookupCallback() {
+        gameProfileRepository.findProfilesByNames(new String[]{username}, new ProfileLookupCallback() {
             @Override
-            public void onProfileLookupSucceeded(GameProfile profile) {
-                future.complete(profile);
+            public void onProfileLookupSucceeded(GameProfile gameProfile) {
+
+                future.complete(gameProfile);
             }
 
             @Override
-            public void onProfileLookupFailed(GameProfile profile, Exception exception) {
-                future.completeExceptionally(exception);
+            public void onProfileLookupFailed(String s, Exception e) {
+                future.completeExceptionally(e);
+
             }
         });
         return future;

@@ -1,49 +1,31 @@
 package net.fw14.createAddons.accessDenied.networking;
 
 import com.simibubi.create.Create;
+import io.netty.buffer.ByteBuf;
 import net.fw14.createAddons.accessDenied.AccessDenied;
 import net.fw14.createAddons.accessDenied.extensions.LogisticNetworkExtensions;
-import net.minecraft.network.FriendlyByteBuf;
-import net.neoforged.network.NetworkDirection;
-import net.neoforged.network.NetworkEvent;
-import net.neoforged.network.PacketDistributor;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Supplier;
 
-public class C2SModifyAllowedPlayersPacket {
-    private final UUID networkId;
-    private final Mode mode;
-    private final @Nullable UUID playerUUID;
+public record C2SModifyAllowedPlayersPacket(UUID networkId, Mode mode, @Nullable UUID uuid) implements CustomPacketPayload {
+    public static final CustomPacketPayload.Type<C2SModifyAllowedPlayersPacket> TYPE = new CustomPacketPayload.Type<>(AccessDenied.resLoc("allowed_players_sync"));
 
-    public C2SModifyAllowedPlayersPacket(UUID networkId, Mode mode, @Nullable UUID playerUUID) {
-        if (mode.requiresId && playerUUID == null)
-            throw new RuntimeException("Mode " + mode + " requries player UUID!");
-
-        this.networkId = networkId;
-        this.mode = mode;
-        this.playerUUID = playerUUID;
-    }
-
-    public static C2SModifyAllowedPlayersPacket read(FriendlyByteBuf buffer) {
-        var networkId = buffer.readUUID();
-
-        var oMode = Mode.fromId(buffer.readByte());
-        if (oMode.isEmpty())
-            throw new RuntimeException("Invalid Mode supplied!");
-
-        var mode = oMode.get();
-        UUID playerId = null;
-
-        if (mode.requiresId) {
-            playerId = buffer.readUUID();
-        }
-
-        return new C2SModifyAllowedPlayersPacket(networkId, mode, playerId);
-    }
+    public static final StreamCodec<ByteBuf, C2SModifyAllowedPlayersPacket> CODEC = StreamCodec.composite(
+            UUIDUtil.STREAM_CODEC, C2SModifyAllowedPlayersPacket::networkId,
+            ByteBufCodecs.BYTE.map(Mode::fromIdF, Mode::type), C2SModifyAllowedPlayersPacket::mode,
+            UUIDUtil.STREAM_CODEC, C2SModifyAllowedPlayersPacket::networkId,
+            C2SModifyAllowedPlayersPacket::new
+    );
 
     public static C2SModifyAllowedPlayersPacket add(UUID networkId, UUID playerUUID) {
         return new C2SModifyAllowedPlayersPacket(networkId, Mode.ADD, playerUUID);
@@ -52,45 +34,40 @@ public class C2SModifyAllowedPlayersPacket {
         return new C2SModifyAllowedPlayersPacket(networkId, Mode.REMOVE, playerUUID);
     }
     public static C2SModifyAllowedPlayersPacket clear(UUID networkId) {
-        return new C2SModifyAllowedPlayersPacket(networkId, Mode.CLEAR, null);
+        return new C2SModifyAllowedPlayersPacket(networkId, Mode.CLEAR, new UUID(0, 0));
     }
 
-    public static void write(C2SModifyAllowedPlayersPacket packet, FriendlyByteBuf buffer) {
-        buffer.writeUUID(packet.networkId);
-        buffer.writeByte(packet.mode.type);
-        if (packet.mode.requiresId && packet.playerUUID != null)
-            buffer.writeUUID(packet.playerUUID);
-    }
-
-    public void handle(Supplier<NetworkEvent.Context> ctx) {
-        if (!ctx.get().getDirection().equals(NetworkDirection.PLAY_TO_SERVER))
-            return;
-
-        ctx.get().enqueueWork(() -> {
-            if (!Create.LOGISTICS.mayAdministrate(networkId, ctx.get().getSender())) {
+    public static void handle(final C2SModifyAllowedPlayersPacket packet, final IPayloadContext ctx) {
+        ctx.enqueueWork(() -> {
+            if (!Create.LOGISTICS.mayAdministrate(packet.networkId, ctx.player())) {
                 return;
             }
 
-            var network = (LogisticNetworkExtensions) Create.LOGISTICS.logisticsNetworks.get(this.networkId);
+            var network = (LogisticNetworkExtensions) Create.LOGISTICS.logisticsNetworks.get(packet.networkId);
 
-            switch (mode) {
-                case ADD -> network.accessDenied$addAllowedPlayer(this.playerUUID);
-                case REMOVE -> network.accessDenied$removeAllowedPlayer(this.playerUUID);
+            switch (packet.mode) {
+                case ADD -> network.accessDenied$addAllowedPlayer(packet.uuid());
+                case REMOVE -> network.accessDenied$removeAllowedPlayer(packet.uuid());
                 case CLEAR -> network.accessDenied$clearAllowedPlayers();
+                case NOOP -> {
+                    return;
+                }
             }
 
             Create.LOGISTICS.markDirty();
-            AccessDenied.NETWORK_CHANNEL.send(PacketDistributor.PLAYER.with(() -> ctx.get().getSender()),
-                    S2CAllowedPlayersSyncPacket.fromNetworkId(this.networkId));
+            PacketDistributor.sendToPlayer((ServerPlayer) ctx.player(), S2CAllowedPlayersSyncPacket.fromNetworkId(packet.networkId));
         });
-
-        ctx.get().setPacketHandled(true);
     }
+    public Type<? extends CustomPacketPayload> type() {
+        return TYPE;
+    }
+
 
     public enum Mode {
         ADD((byte)1, true),
         REMOVE((byte)2, true),
-        CLEAR((byte)3, false)
+        CLEAR((byte)3, false),
+        NOOP((byte)0, false),
 
         ;
 
@@ -112,6 +89,9 @@ public class C2SModifyAllowedPlayersPacket {
 
         public static Optional<Mode> fromId(byte id) {
             return Arrays.stream(values()).filter(v -> v.type == id).findFirst();
+        }
+        public static Mode fromIdF(byte id) {
+            return fromId(id).orElseGet(()->Mode.NOOP);
         }
     }
 }

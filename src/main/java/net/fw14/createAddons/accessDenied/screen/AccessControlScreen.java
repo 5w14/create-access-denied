@@ -14,6 +14,7 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
+import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
@@ -268,8 +269,7 @@ public class AccessControlScreen extends Screen {
         var cachedProfile = profileCache.values().stream().filter(v ->
                 v.profile.getName().equalsIgnoreCase(value)).findFirst();
         if (cachedProfile.isPresent()) {
-            AccessDenied.NETWORK_CHANNEL.sendToServer
-                    (C2SModifyAllowedPlayersPacket.add(this.networkId, cachedProfile.get().profile().getId()));
+            PacketDistributor.sendToServer(C2SModifyAllowedPlayersPacket.add(this.networkId, cachedProfile.get().profile().getId()));
             return;
         }
 
@@ -279,15 +279,13 @@ public class AccessControlScreen extends Screen {
                     return;
 
                 ProfileCache.preCache(profile.getId(), minecraft);
-                AccessDenied.NETWORK_CHANNEL.sendToServer
-                        (C2SModifyAllowedPlayersPacket.add(this.networkId, profile.getId()));
+                PacketDistributor.sendToServer(C2SModifyAllowedPlayersPacket.add(this.networkId, profile.getId()));
             });
         });
     }
 
     private void submitToRemove(ProfileCache cached) {
-        AccessDenied.NETWORK_CHANNEL.sendToServer(
-                C2SModifyAllowedPlayersPacket.remove(this.networkId, cached.profile.getId()));
+        PacketDistributor.sendToServer(C2SModifyAllowedPlayersPacket.remove(this.networkId, cached.profile().getId()));
     }
 
     @Override
