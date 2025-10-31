@@ -16,7 +16,12 @@ base {
 }
 
 neoForge { 
-    version = neoforge_version 
+    version = neoforge_version
+
+    parchment {
+        mappingsVersion = project.parchment_mappings_version
+        minecraftVersion = project.parchment_minecraft_version
+    }
 
     runs {
         configureEach {
@@ -42,7 +47,8 @@ neoForge {
 
         data {
             data()
-            programArguments.addAll '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+
+//            programArguments.addAll '--mod', mod_id, '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
         }
     }
 

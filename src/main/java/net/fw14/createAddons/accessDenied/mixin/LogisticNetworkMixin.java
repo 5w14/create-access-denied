@@ -3,6 +3,7 @@ package net.fw14.createAddons.accessDenied.mixin;
 import com.simibubi.create.content.logistics.packagerLink.LogisticsNetwork;
 import net.fw14.createAddons.accessDenied.AccessDenied;
 import net.fw14.createAddons.accessDenied.extensions.LogisticNetworkExtensions;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
@@ -23,7 +24,7 @@ public class LogisticNetworkMixin implements LogisticNetworkExtensions {
     public Set<UUID> accessDenied$allowedPlayers = new HashSet<>();
 
     @Inject(at = @At("RETURN"), method = "read", remap = false)
-    private static void readAllowedPlayers(CompoundTag tag, CallbackInfoReturnable<LogisticsNetwork> cir) {
+    private static void readAllowedPlayers(CompoundTag tag, HolderLookup.Provider registries, CallbackInfoReturnable<LogisticsNetwork> cir) {
         var network = cir.getReturnValue();
 
         if (!tag.contains("AllowedPlayers"))

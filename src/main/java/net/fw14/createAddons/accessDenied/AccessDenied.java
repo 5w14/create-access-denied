@@ -10,9 +10,10 @@ import net.fw14.createAddons.accessDenied.networking.C2SModifyAllowedPlayersPack
 import net.fw14.createAddons.accessDenied.networking.S2CAllowedPlayersSyncPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.network.NetworkRegistry;
-import net.minecraftforge.network.simple.SimpleChannel;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.network.NetworkRegistry;
+import net.neoforged.network.simple.SimpleChannel;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 
@@ -24,7 +25,7 @@ import java.util.concurrent.CompletableFuture;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(AccessDenied.MODID)
-@Mod.EventBusSubscriber
+@EventBusSubscriber
 public class AccessDenied {
     public static String PROTOCOL_VERSION = "1";
     public static final String MODID = "create_access_denied";
@@ -79,12 +80,6 @@ public class AccessDenied {
     }
 
     public static ResourceLocation resLoc(String location) { 
-        try { 
-            if (ResourceLocation.class.getMethod("fromNamespaceAndPath", String.class, String.class) != null)
-                return ResourceLocation.fromNamespaceAndPath(MODID, location);
-        } catch (Exception nsm) { 
-        }
-
-        return new ResourceLocation(MODID, location);
+        return ResourceLocation.fromNamespaceAndPath(MODID, location);
     }
 }

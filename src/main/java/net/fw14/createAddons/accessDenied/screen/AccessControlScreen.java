@@ -48,11 +48,9 @@ public class AccessControlScreen extends Screen {
                 return profileCache.get(uuid);
 
             var profile = new GameProfile(uuid, null);
-            profile = minecraft.getMinecraftSessionService().fillProfileProperties(profile, false);
-            var tex = minecraft.getMinecraftSessionService().getTextures(profile, false).get(MinecraftProfileTexture.Type.SKIN);
-            var resloc = tex != null ? minecraft.getSkinManager().registerTexture(tex, MinecraftProfileTexture.Type.SKIN)
-                    : minecraft.getSkinManager().getInsecureSkinLocation(profile);
-            var toCache = new ProfileCache(profile, tex, resloc);
+            profile = minecraft.getMinecraftSessionService().fetchProfile(profile.getId(), false).profile();
+            var skin = minecraft.getSkinManager().getOrLoad(profile).join();
+            var toCache = new ProfileCache(profile, null, skin.texture());
             profileCache.put(uuid, toCache);
             return toCache;
         }
@@ -103,7 +101,7 @@ public class AccessControlScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float f) {
-        this.renderBackground(graphics);
+        this.renderBackground(graphics, mouseX, mouseY, f);
 
         int uiStartX = this.width / 2 - UI_WIDTH / 2 ;
         int uiStartY = this.height / 2 - UI_HEIGHT / 2;
@@ -191,14 +189,14 @@ public class AccessControlScreen extends Screen {
         if (isHovering(mouseX, mouseY, uiStartX - 7, uiStartY + UI_HEIGHT + 4, 55, 15) && mouseButton == 0) {
             minecraft.setScreen(parent);
             Minecraft.getInstance().getSoundManager().
-                    play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.get(), 1.0f, 0.8f * 0.25F));
+                    play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1.0f, 0.8f * 0.25F));
             return true;
         }
 
         if (isHoveringButton(mouseX, mouseY) && mouseButton == 0) {
             submitToAdd();
             Minecraft.getInstance().getSoundManager().
-                    play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.get(), 1.0f, 0.8f * 0.25F));
+                    play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1.0f, 0.8f * 0.25F));
             return true;
         }
 
@@ -219,7 +217,7 @@ public class AccessControlScreen extends Screen {
             if (isHovering) {
                 submitToRemove(profile);
                 Minecraft.getInstance().getSoundManager().
-                        play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.get(), 1.0f, 0.8f * 0.25F));
+                        play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK.value(), 1.0f, 0.8f * 0.25F));
                 return true;
             }
 

@@ -6,8 +6,8 @@ import net.fw14.createAddons.accessDenied.extensions.LogisticsManagerExtensions;
 import net.fw14.createAddons.accessDenied.screen.AccessControlScreen;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkDirection;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.network.NetworkDirection;
+import net.neoforged.network.NetworkEvent;
 
 import java.util.HashSet;
 import java.util.Set;

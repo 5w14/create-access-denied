@@ -59,7 +59,7 @@ public class PlayerEditBox extends EditBox {
             return true;
         } else if (this.isFocused() && pKeyCode == 257) {
             this.setFocused(false);
-            this.moveCursorToEnd();
+            this.moveCursorToEnd(false);
             this.mouseClicked((double)0.0F, (double)0.0F, 0);
             return true;
         } else {
@@ -67,8 +67,8 @@ public class PlayerEditBox extends EditBox {
         }
     }
 
-    public boolean mouseScrolled(double pMouseX, double pMouseY, double pDelta) {
-        return this.destinationSuggestions.mouseScrolled(Mth.clamp(pDelta, (double)-1.0F, (double)1.0F)) ? true : super.mouseScrolled(pMouseX, pMouseY, pDelta);
+    public boolean mouseScrolled(double pMouseX, double pMouseY, double pDelta, double scrollY) {
+        return this.destinationSuggestions.mouseScrolled(Mth.clamp(pDelta, (double) -1.0F, (double) 1.0F)) || super.mouseScrolled(pMouseX, pMouseY, pDelta, scrollY);
     }
 
     public boolean mouseClicked(double pMouseX, double pMouseY, int pButton) {
@@ -116,7 +116,6 @@ public class PlayerEditBox extends EditBox {
     }
 
     public void tick() {
-        super.tick();
         if (!this.isFocused()) {
             this.destinationSuggestions.hide();
         }

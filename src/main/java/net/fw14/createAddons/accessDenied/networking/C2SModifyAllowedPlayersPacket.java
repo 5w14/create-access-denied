@@ -4,9 +4,9 @@ import com.simibubi.create.Create;
 import net.fw14.createAddons.accessDenied.AccessDenied;
 import net.fw14.createAddons.accessDenied.extensions.LogisticNetworkExtensions;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.network.NetworkDirection;
-import net.minecraftforge.network.NetworkEvent;
-import net.minecraftforge.network.PacketDistributor;
+import net.neoforged.network.NetworkDirection;
+import net.neoforged.network.NetworkEvent;
+import net.neoforged.network.PacketDistributor;
 
 import javax.annotation.Nullable;
 import java.util.Arrays;
