@@ -23,7 +23,7 @@ import java.util.concurrent.CompletableFuture;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(AccessDenied.MODID)
-@EventBusSubscriber
+@EventBusSubscriber(modid = AccessDenied.MODID)
 public class AccessDenied {
     public static String PROTOCOL_VERSION = "1";
     public static final String MODID = "create_access_denied";
@@ -39,10 +39,12 @@ public class AccessDenied {
 
 
     @SubscribeEvent
-    private static void setupNetworking(RegisterPayloadHandlersEvent event) {
-        var protocol = event.registrar(PROTOCOL_VERSION);
-        protocol.playToClient(S2CAllowedPlayersSyncPacket.TYPE, S2CAllowedPlayersSyncPacket.CODEC, S2CAllowedPlayersSyncPacket::handle);
-        protocol.playToServer(C2SModifyAllowedPlayersPacket.TYPE, C2SModifyAllowedPlayersPacket.CODEC, C2SModifyAllowedPlayersPacket::handle);
+    public static void setupNetworking(RegisterPayloadHandlersEvent event) {
+        try {
+            var protocol = event.registrar(PROTOCOL_VERSION);
+            protocol.playToClient(S2CAllowedPlayersSyncPacket.TYPE, S2CAllowedPlayersSyncPacket.CODEC, S2CAllowedPlayersSyncPacket::handle);
+            protocol.playToServer(C2SModifyAllowedPlayersPacket.TYPE, C2SModifyAllowedPlayersPacket.CODEC, C2SModifyAllowedPlayersPacket::handle);
+        } catch (Exception e) { }
     }
 
     static GameProfileRepository gameProfileRepository;

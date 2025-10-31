@@ -85,6 +85,7 @@ public class AccessControlScreen extends Screen {
 
         var box = addRenderableWidget( new PlayerEditBox(this, font, uiStartX + 10, uiStartY + 103, 157, 16, false) );
         box.setBordered(false);
+        box.setFocused(true);
         box.setMaxLength(16);
         box.setTextColor(0xFFFFFF);
         this.playerUsernameBox = box;
@@ -102,7 +103,7 @@ public class AccessControlScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float f) {
-        this.renderBackground(graphics, mouseX, mouseY, f);
+        super.render(graphics, mouseX, mouseY, f);
 
         int uiStartX = this.width / 2 - UI_WIDTH / 2 ;
         int uiStartY = this.height / 2 - UI_HEIGHT / 2;
@@ -172,7 +173,6 @@ public class AccessControlScreen extends Screen {
         }
 
         playerUsernameBox.active = !atLimit();
-        super.render(graphics, mouseX, mouseY, f);
     }
 
     boolean isHovering(double mouseX, double mouseY, int x, int y, int w, int h) {
@@ -180,10 +180,11 @@ public class AccessControlScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
-        if (super.mouseClicked(mouseX, mouseY, mouseButton))
-            return true;
+    protected void renderBlurredBackground(float partialTick) {
+    }
 
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
         int uiStartX = this.width / 2 - UI_WIDTH / 2 ;
         int uiStartY = this.height / 2 - UI_HEIGHT / 2;
 
@@ -229,7 +230,7 @@ public class AccessControlScreen extends Screen {
             }
         }
 
-        return false;
+        return super.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     @Override

@@ -18,7 +18,7 @@ import java.util.UUID;
 
 @Mixin(GlobalLogisticsManager.class)
 public class LogisticsMixin implements LogisticsManagerExtensions {
-    @Shadow public Map<UUID, LogisticsNetwork> logisticsNetworks;
+    @Shadow(remap = false) public Map<UUID, LogisticsNetwork> logisticsNetworks;
 
     @Inject(at = @At("RETURN"), method = "mayInteract", cancellable = true, remap = false)
     public void overrideMayInteract(UUID networkId, Player player, CallbackInfoReturnable<Boolean> cir) {

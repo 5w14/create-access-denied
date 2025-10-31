@@ -2,7 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "net.fw14.createAddons.accessDenied.mixin",
-  "compatibilityLevel": "JAVA_8",
+  "compatibilityLevel": "JAVA_21",
   "refmap": "create_access_denied.refmap.json",
   "mixins": [
     "LogisticNetworkMixin",

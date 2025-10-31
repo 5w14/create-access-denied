@@ -31,6 +31,7 @@ neoForge {
 
         client {
             client()
+            programArgument '-XX:+AllowEnhancedClassRedefinition'
             systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
         }
 
@@ -74,7 +75,7 @@ dependencies {
     implementation "net.neoforged:neoforge:${neoforge_version}"
     implementation "maven.modrinth:create:mc${minecraft_version}-${create_version}"
     implementation "net.createmod.ponder:Ponder-NeoForge-${minecraft_version}:${ponder_version}"
-    // annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
