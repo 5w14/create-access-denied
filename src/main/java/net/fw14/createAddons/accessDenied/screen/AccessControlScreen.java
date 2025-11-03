@@ -1,7 +1,6 @@
 package net.fw14.createAddons.accessDenied.screen;
 
 import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.simibubi.create.content.trains.station.NoShadowFontWrapper;
 import net.fw14.createAddons.accessDenied.AccessDenied;
 import net.fw14.createAddons.accessDenied.networking.C2SModifyAllowedPlayersPacket;
@@ -43,16 +42,25 @@ public class AccessControlScreen extends Screen {
 
     private static final Map<UUID, ProfileCache> profileCache = new ConcurrentHashMap<>();
 
-    public record ProfileCache(GameProfile profile, MinecraftProfileTexture profileTexture, ResourceLocation skinLocation) {
+    public record ProfileCache(GameProfile profile, ResourceLocation skinLocation) {
         public static ProfileCache get(UUID uuid, Minecraft minecraft) {
             if (profileCache.containsKey(uuid))
                 return profileCache.get(uuid);
 
-            var profile = new GameProfile(uuid, null);
-            profile = minecraft.getMinecraftSessionService().fetchProfile(profile.getId(), false).profile();
-            var skin = minecraft.getSkinManager().getOrLoad(profile).join();
-            var toCache = new ProfileCache(profile, null, skin.texture());
+            var profileFetched = minecraft.getMinecraftSessionService().fetchProfile(uuid, false);
+            if (profileFetched == null)
+                return new ProfileCache(new GameProfile(uuid, uuid.toString()),
+                        minecraft.getSkinManager().getInsecureSkin(new GameProfile(uuid, uuid.toString())).texture());
+
+            var profile = profileFetched.profile();
+            var skin = minecraft.getSkinManager().getInsecureSkin(profile);
+            var toCache = new ProfileCache(profile, skin.texture());
             profileCache.put(uuid, toCache);
+
+            minecraft.getSkinManager().getOrLoad(profile).whenComplete((fetchedSkin, throwable) -> {
+                profileCache.put(profile.getId(), new ProfileCache(profile, fetchedSkin.texture()));
+            });
+
             return toCache;
         }
 
@@ -103,7 +111,7 @@ public class AccessControlScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float f) {
-        super.render(graphics, mouseX, mouseY, f);
+        super.renderBackground(graphics, mouseX, mouseY, f);
 
         int uiStartX = this.width / 2 - UI_WIDTH / 2 ;
         int uiStartY = this.height / 2 - UI_HEIGHT / 2;
@@ -173,6 +181,8 @@ public class AccessControlScreen extends Screen {
         }
 
         playerUsernameBox.active = !atLimit();
+
+        playerUsernameBox.render(graphics, mouseX, mouseY, f);
     }
 
     boolean isHovering(double mouseX, double mouseY, int x, int y, int w, int h) {

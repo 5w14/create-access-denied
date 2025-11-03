@@ -17,13 +17,13 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
 
-public record C2SModifyAllowedPlayersPacket(UUID networkId, Mode mode, @Nullable UUID uuid) implements CustomPacketPayload {
-    public static final CustomPacketPayload.Type<C2SModifyAllowedPlayersPacket> TYPE = new CustomPacketPayload.Type<>(AccessDenied.resLoc("allowed_players_sync"));
+public record C2SModifyAllowedPlayersPacket(UUID networkId, Mode mode, @Nullable UUID playerUUID) implements CustomPacketPayload {
+    public static final CustomPacketPayload.Type<C2SModifyAllowedPlayersPacket> TYPE = new CustomPacketPayload.Type<>(AccessDenied.resLoc("modify_allowed_players"));
 
     public static final StreamCodec<ByteBuf, C2SModifyAllowedPlayersPacket> CODEC = StreamCodec.composite(
             UUIDUtil.STREAM_CODEC, C2SModifyAllowedPlayersPacket::networkId,
             ByteBufCodecs.BYTE.map(Mode::fromIdF, Mode::type), C2SModifyAllowedPlayersPacket::mode,
-            UUIDUtil.STREAM_CODEC, C2SModifyAllowedPlayersPacket::networkId,
+            UUIDUtil.STREAM_CODEC, C2SModifyAllowedPlayersPacket::getPlayerUUID,
             C2SModifyAllowedPlayersPacket::new
     );
 
@@ -37,6 +37,12 @@ public record C2SModifyAllowedPlayersPacket(UUID networkId, Mode mode, @Nullable
         return new C2SModifyAllowedPlayersPacket(networkId, Mode.CLEAR, new UUID(0, 0));
     }
 
+    public UUID getPlayerUUID() {
+        if (playerUUID == null)
+            return new UUID(0L, 0L);
+        return playerUUID;
+    }
+
     public static void handle(final C2SModifyAllowedPlayersPacket packet, final IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!Create.LOGISTICS.mayAdministrate(packet.networkId, ctx.player())) {
@@ -46,8 +52,8 @@ public record C2SModifyAllowedPlayersPacket(UUID networkId, Mode mode, @Nullable
             var network = (LogisticNetworkExtensions) Create.LOGISTICS.logisticsNetworks.get(packet.networkId);
 
             switch (packet.mode) {
-                case ADD -> network.accessDenied$addAllowedPlayer(packet.uuid());
-                case REMOVE -> network.accessDenied$removeAllowedPlayer(packet.uuid());
+                case ADD -> network.accessDenied$addAllowedPlayer(packet.playerUUID());
+                case REMOVE -> network.accessDenied$removeAllowedPlayer(packet.playerUUID());
                 case CLEAR -> network.accessDenied$clearAllowedPlayers();
                 case NOOP -> {
                     return;
@@ -58,10 +64,10 @@ public record C2SModifyAllowedPlayersPacket(UUID networkId, Mode mode, @Nullable
             PacketDistributor.sendToPlayer((ServerPlayer) ctx.player(), S2CAllowedPlayersSyncPacket.fromNetworkId(packet.networkId));
         });
     }
+
     public Type<? extends CustomPacketPayload> type() {
         return TYPE;
     }
-
 
     public enum Mode {
         ADD((byte)1, true),

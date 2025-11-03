@@ -37,7 +37,7 @@ public record S2CAllowedPlayersSyncPacket(UUID networkUUID, Set<UUID> allowedPla
     public static void handle(final S2CAllowedPlayersSyncPacket data, final IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             AccessDenied.AllowedPlayersClientState.put(data.networkUUID, data.allowedPlayers);
-            data.allowedPlayers.forEach((uuid) -> AccessControlScreen.ProfileCache.preCache(uuid, Minecraft.getInstance()));
+            data.allowedPlayers.forEach((playerUUID) -> AccessControlScreen.ProfileCache.preCache(playerUUID, Minecraft.getInstance()));
         });
     }
 
