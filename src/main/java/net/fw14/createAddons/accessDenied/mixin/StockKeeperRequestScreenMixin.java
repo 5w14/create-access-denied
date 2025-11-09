@@ -25,13 +25,13 @@ import java.util.List;
 
 @Mixin(StockKeeperRequestScreen.class)
 public class StockKeeperRequestScreenMixin extends Screen {
-    @Shadow @Final private boolean isAdmin;
-    @Shadow private boolean isLocked;
-    @Shadow StockTickerBlockEntity blockEntity;
-    @Shadow int lockX;
-    @Shadow int lockY;
-    @Shadow private boolean scrollHandleActive;
-    @Shadow public LerpedFloat itemScroll;
+    @Shadow(remap = false) @Final private boolean isAdmin;
+    @Shadow(remap = false) private boolean isLocked;
+    @Shadow(remap = false) StockTickerBlockEntity blockEntity;
+    @Shadow(remap = false) int lockX;
+    @Shadow(remap = false) int lockY;
+    @Shadow(remap = false) private boolean scrollHandleActive;
+    @Shadow(remap = false) public LerpedFloat itemScroll;
 
     protected StockKeeperRequestScreenMixin(Component p_96550_) { super(p_96550_); }
 
