@@ -42,25 +42,40 @@ public class AccessControlScreen extends Screen {
 
     private static final Map<UUID, ProfileCache> profileCache = new ConcurrentHashMap<>();
 
-    public record ProfileCache(GameProfile profile, MinecraftProfileTexture profileTexture, ResourceLocation skinLocation) {
-        public static ProfileCache get(UUID uuid, Minecraft minecraft) {
-            if (profileCache.containsKey(uuid))
-                return profileCache.get(uuid);
-
+    public record ProfileCache(GameProfile profile, ResourceLocation skinLocation) {
+        public static ProfileCache get(UUID uuid, Minecraft minecraft, boolean forceDownload) {
             var profile = new GameProfile(uuid, null);
+
+            if (!forceDownload) {
+                var cachedProfile = profileCache.getOrDefault(uuid, null);
+
+                if (cachedProfile == null)
+                    return new ProfileCache(profile, minecraft.getSkinManager().getInsecureSkinLocation(profile));
+
+                return cachedProfile;
+            }
+
             profile = minecraft.getMinecraftSessionService().fillProfileProperties(profile, false);
-            var tex = minecraft.getMinecraftSessionService().getTextures(profile, false).get(MinecraftProfileTexture.Type.SKIN);
-            var resloc = tex != null ? minecraft.getSkinManager().registerTexture(tex, MinecraftProfileTexture.Type.SKIN)
-                    : minecraft.getSkinManager().getInsecureSkinLocation(profile);
-            var toCache = new ProfileCache(profile, tex, resloc);
-            profileCache.put(uuid, toCache);
-            return toCache;
+            return addFilled(profile, minecraft);
+        }
+
+        public static ProfileCache get(UUID uuid, Minecraft minecraft) {
+            return get(uuid, minecraft, false);
         }
 
         public static void preCache(UUID playerUUID, Minecraft minecraft) {
             CompletableFuture.runAsync(() -> {
-                get(playerUUID, minecraft);
+                get(playerUUID, minecraft, true);
             });
+        }
+
+        public static ProfileCache addFilled(GameProfile profile, Minecraft minecraft) {
+            var tex = minecraft.getMinecraftSessionService().getTextures(profile, false).get(MinecraftProfileTexture.Type.SKIN);
+            var resloc = tex != null ? minecraft.getSkinManager().registerTexture(tex, MinecraftProfileTexture.Type.SKIN)
+                    : minecraft.getSkinManager().getInsecureSkinLocation(profile);
+            var toCache = new ProfileCache(profile, resloc);
+            profileCache.put(profile.getId(), toCache);
+            return toCache;
         }
 
        public void renderSkin(GuiGraphics guiGraphics, int x, int y, int k) {
@@ -143,9 +158,11 @@ public class AccessControlScreen extends Screen {
                 graphics.fill(x - 3, playerRenderY - 3, x + HEAD_SIZE + 3,
                         playerRenderY + HEAD_SIZE + 3, 0x22000000);
                 profile.renderSkin(graphics, x, playerRenderY, HEAD_SIZE);
+
+                var profileName = profile.profile.getName() != null ? profile.profile.getName() : profile.profile.getId().toString();
                 graphics.renderComponentTooltip(minecraft.font,
                         List.of(
-                                Component.literal(profile.profile.getName()),
+                                Component.literal(profileName),
                                 Component.translatable("create_access_denied.screen.remove_hint")
                                         .withStyle(ChatFormatting.GRAY)), mouseX, mouseY);
             } else {
@@ -280,7 +297,8 @@ public class AccessControlScreen extends Screen {
                 if (exception != null || profile == null)
                     return;
 
-                ProfileCache.preCache(profile.getId(), minecraft);
+                ProfileCache.addFilled(profile, this.minecraft);
+
                 AccessDenied.NETWORK_CHANNEL.sendToServer
                         (C2SModifyAllowedPlayersPacket.add(this.networkId, profile.getId()));
             });

@@ -37,6 +37,10 @@ minecraft {
             property 'forge.logging.markers', 'REGISTRIES'
             property 'forge.logging.console.level', 'debug'
 
+            jvmArg "-XX:+IgnoreUnrecognizedVMOptions"
+            jvmArg "-XX:+UnlockExperimentalVMOptions"
+            jvmArg "-XX:+AllowEnhancedClassRedefinition"
+
             mods {
                 "${mod_id}" {
                     source sourceSets.main
