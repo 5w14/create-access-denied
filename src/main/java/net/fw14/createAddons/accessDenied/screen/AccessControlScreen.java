@@ -52,22 +52,25 @@ public class AccessControlScreen extends Screen {
                 return new ProfileCache(new GameProfile(uuid, uuid.toString()),
                         minecraft.getSkinManager().getInsecureSkin(new GameProfile(uuid, uuid.toString())).texture());
 
-            var profile = profileFetched.profile();
-            var skin = minecraft.getSkinManager().getInsecureSkin(profile);
-            var toCache = new ProfileCache(profile, skin.texture());
-            profileCache.put(uuid, toCache);
-
-            minecraft.getSkinManager().getOrLoad(profile).whenComplete((fetchedSkin, throwable) -> {
-                profileCache.put(profile.getId(), new ProfileCache(profile, fetchedSkin.texture()));
-            });
-
-            return toCache;
+            return addFetched(profileFetched.profile(), minecraft);
         }
 
         public static void preCache(UUID playerUUID, Minecraft minecraft) {
             CompletableFuture.runAsync(() -> {
                 get(playerUUID, minecraft);
             });
+        }
+
+        public static ProfileCache addFetched(GameProfile profile, Minecraft minecraft) {
+            var skin = minecraft.getSkinManager().getInsecureSkin(profile);
+            var toCache = new ProfileCache(profile, skin.texture());
+            profileCache.put(profile.getId(), toCache);
+
+            minecraft.getSkinManager().getOrLoad(profile).whenComplete((fetchedSkin, throwable) -> {
+                profileCache.put(profile.getId(), new ProfileCache(profile, fetchedSkin.texture()));
+            });
+
+            return toCache;
         }
 
        public void renderSkin(GuiGraphics guiGraphics, int x, int y, int k) {
@@ -289,7 +292,7 @@ public class AccessControlScreen extends Screen {
                 if (exception != null || profile == null)
                     return;
 
-                ProfileCache.preCache(profile.getId(), minecraft);
+                ProfileCache.preCache(profile.getId(), this.minecraft);
                 PacketDistributor.sendToServer(C2SModifyAllowedPlayersPacket.add(this.networkId, profile.getId()));
             });
         });
