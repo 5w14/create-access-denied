@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.simibubi.create.content.trains.station.NoShadowFontWrapper;
 import net.fw14.createAddons.accessDenied.AccessDenied;
+import net.fw14.createAddons.accessDenied.client.AccessDeniedClient;
 import net.fw14.createAddons.accessDenied.networking.C2SModifyAllowedPlayersPacket;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -293,7 +294,7 @@ public class AccessControlScreen extends Screen {
         }
 
         CompletableFuture.runAsync(() -> {
-            AccessDenied.fetchProfileByUsername(value).whenComplete((profile, exception) -> {
+            AccessDeniedClient.fetchProfileByUsername(value).whenComplete((profile, exception) -> {
                 if (exception != null || profile == null)
                     return;
 
