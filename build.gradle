@@ -5,7 +5,10 @@ plugins {
 }
 
 group = mod_group_id
-version = mod_version
+
+def formatted_mod_version = "${mod_version}+c${create_version}.mc${minecraft_version}"
+
+version = formatted_mod_version
 
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(21)
@@ -71,18 +74,40 @@ repositories {
     maven { url = "https://maven.createmod.net" }
 }
 
+configurations {
+    createMod
+}
+
+def extractedPonderJar = layout.buildDirectory.file("create-subjars/ponder.jar")
+def extractPonderJar = tasks.register("extractPonderJar", Copy) {
+    from({ zipTree(configurations.createMod.singleFile) }) {
+        include "META-INF/jarjar/ponder-neoforge-*.jar"
+        eachFile { path = name }
+        includeEmptyDirs = false
+        rename { "ponder.jar" }
+    }
+    into extractedPonderJar.get().asFile.parentFile
+}
+
 dependencies {
     implementation "net.neoforged:neoforge:${neoforge_version}"
-    implementation "maven.modrinth:create:${minecraft_version}-${create_version}"
-    implementation "net.createmod.ponder:Ponder-NeoForge-${minecraft_version}:${ponder_version}"
+
+    createMod "maven.modrinth:create:${create_version}+mc${minecraft_version}"
+    implementation "maven.modrinth:create:${create_version}+mc${minecraft_version}"
+    compileOnly(files(extractedPonderJar).builtBy(extractPonderJar))
+
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+}
+
+tasks.named('compileJava').configure {
+    dependsOn extractPonderJar
 }
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
     var replaceProperties = [minecraft_version   : minecraft_version, minecraft_version_range: minecraft_version_range,
                              neoforge_version    : neoforge_version, 
                              loader_version_range: loader_version_range,
-                             mod_id              : mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: mod_version,
+                             mod_id              : mod_id, mod_name: mod_name, mod_license: mod_license, mod_version: formatted_mod_version,
                              mod_authors         : mod_authors, mod_description: mod_description,
                              create_version      : create_version]
 
@@ -107,7 +132,7 @@ tasks.named('jar', Jar).configure {
     }
 
     archiveBaseName.set(mod_id.replaceAll("_", "-"))
-    archiveVersion.set("${mod_version}-mc${minecraft_version}-c${create_version}")
+    archiveVersion.set(formatted_mod_version)
 }
 
 tasks.withType(JavaCompile).configureEach {

@@ -29,7 +29,7 @@ public class StockKeeperRequestScreenMixin extends Screen {
     @Shadow(remap = false) private boolean isLocked;
     @Shadow(remap = false) StockTickerBlockEntity blockEntity;
     @Shadow(remap = false) int lockX;
-    @Shadow(remap = false) int lockY;
+    @Shadow(remap = false) int besideSearchButtonY;
     @Shadow(remap = false) private boolean scrollHandleActive;
     @Shadow(remap = false) public LerpedFloat itemScroll;
 
@@ -51,11 +51,11 @@ public class StockKeeperRequestScreenMixin extends Screen {
         graphics.pose().translate(0f - 4f * progress, 0f, 0f);
 
         RenderSystem.setShaderTexture(0, AccessDenied.resLoc("textures/gui/configure_button.png"));
-        UIRenderHelper.drawColoredTexture(graphics, Color.WHITE.setAlpha(1f - progress), posX, lockY, 0, 0, 0, 16, 16, 16, 16);
+        UIRenderHelper.drawColoredTexture(graphics, Color.WHITE.setAlpha(1f - progress), posX, besideSearchButtonY, 0, 0, 0, 16, 16, 16, 16);
 
         graphics.pose().popPose();
 
-        if (mouseX > posX && mouseX <= posX + 16 && mouseY > lockY && mouseY <= lockY + 16) {
+        if (mouseX > posX && mouseX <= posX + 16 && mouseY > besideSearchButtonY && mouseY <= besideSearchButtonY + 16) {
             graphics.renderComponentTooltip(Minecraft.getInstance().font,
                     List.of(Component.translatable("create_access_denied.configure_button")),
                     mouseX, mouseY);
@@ -67,7 +67,7 @@ public class StockKeeperRequestScreenMixin extends Screen {
         if (!isAdmin || !isLocked) return;
         if (itemScroll.getValue() > 0.5f) return;
         int posX = lockX + 17;
-        if (mouseX > posX && mouseX <= posX + 16 && mouseY > lockY && mouseY <= lockY + 16) {
+        if (mouseX > posX && mouseX <= posX + 16 && mouseY > besideSearchButtonY && mouseY <= besideSearchButtonY + 16) {
             this.minecraft.setScreen(new AccessControlScreen(this.blockEntity.behaviour.freqId, this));
             this.scrollHandleActive = false;
             cir.cancel();
