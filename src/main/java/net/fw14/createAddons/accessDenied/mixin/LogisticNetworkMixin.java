@@ -1,7 +1,7 @@
 package net.fw14.createAddons.accessDenied.mixin;
 
 import com.simibubi.create.content.logistics.packagerLink.LogisticsNetwork;
-import net.fw14.createAddons.accessDenied.AccessDenied;
+import net.fw14.createAddons.accessDenied.config.Config;
 import net.fw14.createAddons.accessDenied.extensions.LogisticNetworkExtensions;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
@@ -55,7 +55,7 @@ public class LogisticNetworkMixin implements LogisticNetworkExtensions {
     @Unique
     @Override
     public void accessDenied$addAllowedPlayer(UUID uuid) {
-        if (this.accessDenied$allowedPlayers.size() >= AccessDenied.PLAYER_LIMIT)
+        if (this.accessDenied$allowedPlayers.size() >= Config.PLAYER_LIMIT.get())
             return;
 
         this.accessDenied$allowedPlayers.add(uuid);

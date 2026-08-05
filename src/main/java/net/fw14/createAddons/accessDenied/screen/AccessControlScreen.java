@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import com.simibubi.create.content.trains.station.NoShadowFontWrapper;
 import net.fw14.createAddons.accessDenied.AccessDenied;
 import net.fw14.createAddons.accessDenied.client.AccessDeniedClient;
+import net.fw14.createAddons.accessDenied.config.Config;
 import net.fw14.createAddons.accessDenied.networking.C2SModifyAllowedPlayersPacket;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -14,6 +15,7 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Mth;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.lwjgl.glfw.GLFW;
 
@@ -37,6 +39,10 @@ public class AccessControlScreen extends Screen {
 
     public static final int HEAD_SIZE = 13;
     public static final int WRAP_COUNT = 9;
+    public static final int ROW_HEIGHT = HEAD_SIZE + 4;
+    public static final int VISIBLE_ROWS = 3;
+    private static final int GRID_TOP_OFFSET = 36;
+    private double scrollOffset;
 
     private PlayerEditBox playerUsernameBox;
     static Font font;
@@ -130,7 +136,7 @@ public class AccessControlScreen extends Screen {
 
             if (isHoveringButton(mouseX, mouseY)) {
                 graphics.renderComponentTooltip(minecraft.font,
-                        List.of(Component.translatable("create_access_denied.screen.at_limit", AccessDenied.PLAYER_LIMIT)), mouseX, mouseY);
+                        List.of(Component.translatable("create_access_denied.screen.at_limit", Config.PLAYER_LIMIT.get())), mouseX, mouseY);
             }
         } else if (isHoveringButton(mouseX, mouseY)) {
             graphics.blit(UI_RL, uiStartX + 170, uiStartY + 98, 208, 48, 18, 18);
@@ -139,36 +145,60 @@ public class AccessControlScreen extends Screen {
 
         graphics.drawString(font, Component.translatable("create_access_denied.screen.players"), uiStartX + 12, uiStartY + 23, 0xedcdbd);
 
-        var playerRenderX = uiStartX - 6;
-        var playerRenderY = uiStartY + 36;
         var networkAllowedPlayers = AccessDenied.AllowedPlayersClientState.get(networkId);
+
+        int viewportY1 = uiStartY + GRID_TOP_OFFSET;
+        int viewportHeight = VISIBLE_ROWS * ROW_HEIGHT;
+        int viewportY2 = viewportY1 + viewportHeight;
+        int maxScroll = maxScroll(networkAllowedPlayers.size());
+        scrollOffset = Mth.clamp(scrollOffset, 0, maxScroll);
+        var playerRenderX = uiStartX - 6;
+        var playerRenderY = viewportY1 - (int) Math.round(scrollOffset);
         int playerIdx = 0;
+        ProfileCache hoveredProfile = null;
+
+
+        graphics.enableScissor(0, viewportY1, this.width, viewportY2);
         for (var player : networkAllowedPlayers) {
             var profile = ProfileCache.get(player, minecraft);
 
             var x = playerRenderX += HEAD_SIZE + 6;
 
-            boolean isHovering = mouseX > playerRenderX - 2 && mouseX <= playerRenderX + HEAD_SIZE + 3
-                    && mouseY > playerRenderY - 2 && mouseY < playerRenderY + HEAD_SIZE + 3;
-
-            if (isHovering) {
-                graphics.fill(x - 3, playerRenderY - 3, x + HEAD_SIZE + 3,
-                        playerRenderY + HEAD_SIZE + 3, 0x22000000);
-                profile.renderSkin(graphics, x, playerRenderY, HEAD_SIZE);
-                graphics.renderComponentTooltip(minecraft.font,
-                        List.of(
-                                Component.literal(profile.profile.getName()),
-                                Component.translatable("create_access_denied.screen.remove_hint")
-                                        .withStyle(ChatFormatting.GRAY)), mouseX, mouseY);
-            } else {
+            if (playerRenderY + HEAD_SIZE >= viewportY1 && playerRenderY <= viewportY2) {
+                boolean isHovering = mouseX > playerRenderX - 2 && mouseX <= playerRenderX + HEAD_SIZE + 3
+                        && mouseY > playerRenderY - 2 && mouseY < playerRenderY + HEAD_SIZE + 3
+                        && mouseY >= viewportY1 && mouseY < viewportY2;
+                if (isHovering) {
+                    graphics.fill(x - 3, playerRenderY - 3, x + HEAD_SIZE + 3, playerRenderY + HEAD_SIZE + 3, 0x22000000);
+                    hoveredProfile = profile;
+                }
                 profile.renderSkin(graphics, x, playerRenderY, HEAD_SIZE);
             }
 
             playerIdx++;
             if (playerIdx % WRAP_COUNT == 0) {
-                playerRenderY += HEAD_SIZE + 4;
+                playerRenderY += ROW_HEIGHT;
                 playerRenderX = uiStartX - 6;
             }
+        }
+        graphics.disableScissor();
+
+        if (maxScroll > 0) {
+            int barX = uiStartX + UI_WIDTH - 5;
+            int thumbHeight = Math.max(6, viewportHeight * viewportHeight / (viewportHeight + maxScroll));
+            int thumbY = viewportY1 + (int) ((viewportHeight - thumbHeight) * (scrollOffset / maxScroll));
+            graphics.fill(barX, viewportY1, barX + 1, viewportY2, 0x33000000);
+            graphics.fill(barX, thumbY, barX + 1, thumbY + thumbHeight, 0x99edcdbd);
+        }
+
+        if (hoveredProfile != null) {
+            graphics.renderComponentTooltip(
+                minecraft.font,
+                List.of(
+                    Component.literal(hoveredProfile.profile.getName()),
+                    Component.translatable("create_access_denied.screen.remove_hint").withStyle(ChatFormatting.GRAY)
+                ), mouseX, mouseY
+            );
         }
 
         if (networkAllowedPlayers.isEmpty()) {
@@ -191,6 +221,27 @@ public class AccessControlScreen extends Screen {
 
     boolean isHovering(double mouseX, double mouseY, int x, int y, int w, int h) {
         return mouseX > x && mouseX < x + w && mouseY > y && mouseY < y + h;
+    }
+
+    private int maxScroll(int playerCount) {
+        int totalRows = (playerCount + WRAP_COUNT - 1) / WRAP_COUNT;
+        int viewportHeight = VISIBLE_ROWS * ROW_HEIGHT;
+        return Math.max(0, totalRows * ROW_HEIGHT - viewportHeight);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        int uiStartX = this.width / 2 - UI_WIDTH / 2;
+        int uiStartY = this.height / 2 - UI_HEIGHT / 2;
+        int viewportY1 = uiStartY + GRID_TOP_OFFSET;
+        int viewportY2 = viewportY1 + VISIBLE_ROWS * ROW_HEIGHT;
+
+        if (mouseX >= uiStartX && mouseX < uiStartX + UI_WIDTH && mouseY >= viewportY1 && mouseY < viewportY2) {
+            var networkAllowedPlayers = AccessDenied.AllowedPlayersClientState.get(networkId);
+            scrollOffset = Mth.clamp(scrollOffset - scrollY * ROW_HEIGHT, 0, maxScroll(networkAllowedPlayers.size()));
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     @Override
@@ -219,16 +270,20 @@ public class AccessControlScreen extends Screen {
         if (!hasShiftDown())
             return super.mouseClicked(mouseX, mouseY, mouseButton);
 
-        var playerRenderX = uiStartX - 6;
-        var playerRenderY = uiStartY + 36;
         var networkAllowedPlayers = AccessDenied.AllowedPlayersClientState.get(networkId);
+        int viewportY1 = uiStartY + GRID_TOP_OFFSET;
+        int viewportY2 = viewportY1 + VISIBLE_ROWS * ROW_HEIGHT;
+        var playerRenderX = uiStartX - 6;
+        var playerRenderY = viewportY1 - (int) Math.round(scrollOffset);
         int playerIdx = 0;
         for (var player : networkAllowedPlayers) {
             var profile = ProfileCache.get(player, minecraft);
 
             playerRenderX += HEAD_SIZE + 6;
-            boolean isHovering = mouseX > playerRenderX - 2 && mouseX <= playerRenderX + HEAD_SIZE + 3
-                    && mouseY > playerRenderY - 2 && mouseY < playerRenderY + HEAD_SIZE + 3;
+            boolean isHovering = playerRenderY + HEAD_SIZE >= viewportY1 && playerRenderY <= viewportY2
+                    && mouseX > playerRenderX - 2 && mouseX <= playerRenderX + HEAD_SIZE + 3
+                    && mouseY > playerRenderY - 2 && mouseY < playerRenderY + HEAD_SIZE + 3
+                    && mouseY >= viewportY1 && mouseY < viewportY2;
 
             if (isHovering) {
                 submitToRemove(profile);
@@ -239,7 +294,7 @@ public class AccessControlScreen extends Screen {
 
             playerIdx++;
             if (playerIdx % WRAP_COUNT == 0) {
-                playerRenderY += HEAD_SIZE + 4;
+                playerRenderY += ROW_HEIGHT;
                 playerRenderX = uiStartX - 6;
             }
         }
@@ -267,7 +322,7 @@ public class AccessControlScreen extends Screen {
 
     boolean atLimit() {
         var networkAllowedPlayers = AccessDenied.AllowedPlayersClientState.get(networkId);
-        return networkAllowedPlayers.size() >= AccessDenied.PLAYER_LIMIT;
+        return networkAllowedPlayers.size() >= Config.PLAYER_LIMIT.get();
     }
 
     private void submitToAdd() {

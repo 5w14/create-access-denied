@@ -1,12 +1,15 @@
 package net.fw14.createAddons.accessDenied;
 
 import com.mojang.logging.LogUtils;
+import net.fw14.createAddons.accessDenied.config.Config;
 import net.fw14.createAddons.accessDenied.networking.C2SModifyAllowedPlayersPacket;
 import net.fw14.createAddons.accessDenied.networking.S2CAllowedPlayersSyncPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import org.slf4j.Logger;
 
@@ -23,9 +26,11 @@ public class AccessDenied {
     public static final String MODID = "create_access_denied";
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    public static final int PLAYER_LIMIT = 18;
-
     public static final Map<UUID, Set<UUID>> AllowedPlayersClientState = new HashMap<>();
+
+    public AccessDenied(ModContainer modContainer) {
+        modContainer.registerConfig(ModConfig.Type.SERVER, Config.SPEC);
+    }
 
     @SubscribeEvent
     public static void setupNetworking(RegisterPayloadHandlersEvent event) {
